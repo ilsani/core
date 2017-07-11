@@ -210,8 +210,19 @@ class CLI {
    public static function edit($text,$filename=''){
       $EDITOR = getenv('EDITOR')?:'nano';
       $tmp = tempnam(sys_get_temp_dir(), "E-").strtr($filename,'/','_');
+
+      // Prevent command injection through $filename param
+      $tmp = escapeshellarg($tmp);
+
       file_put_contents($tmp, $text);
-      passthru("$EDITOR $tmp");
+
+      // Prevent command injection through getenv('EDITOR') - could be unlikely
+      $cmd = "$EDITOR $tmp";
+      $cmd = escapeshellcmd($cmd);
+
+      // Execute safe exe
+      passthru($cmd);
+      
       $result = file_get_contents($tmp);
       unlink($tmp);
       return $result;
